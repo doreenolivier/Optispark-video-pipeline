@@ -10,7 +10,7 @@ from googleapiclient.discovery import build
 app = Flask(__name__)
 
 # Essential global configuration arrays
-SPREADSHEET_ID = "YOUR_SPREADSHEET_ID_HERE"  # Replace with your actual Sheet ID string
+SPREADSHEET_ID = "1U8mc48nwNkxdCVs5KsUQq4rcLeFTv53gTJO78LgzuTw"
 TOTAL_SLIDES = 20
 
 @app.route('/')
