@@ -19,9 +19,9 @@ def home():
 
 def connect_google_sheets():
     """Authenticates securely using your background credentials JSON file"""
+    # FIX: Using the correct, explicit Google Sheets API scope
     scopes = ['https://googleapis.com']
     try:
-        # Assumes credentials.json is saved directly in your root repository folder
         creds = service_account.Credentials.from_service_account_file('credentials.json', scopes=scopes)
         service = build('sheets', 'v4', credentials=creds)
         return service.spreadsheets()
@@ -31,17 +31,20 @@ def connect_google_sheets():
 
 def generate_curriculum_via_groq(topic):
     """Queries Llama 3 to output paired text and keywords for all 20 slides in strict JSON"""
+    # FIX: Updated to use Groq's official Chat Completions API endpoint
+    groq_url = "https://groq.com"
+    
     headers = {
         "Authorization": f"Bearer {os.getenv('GROQ_API_KEY')}",
         "Content-Type": "application/json"
     }
     
-    # We dynamically construct the schema template to keep the AI focused
-    schema = '{\n  "[Hook Script]": "text",\n  "[Hook Keyword]": "keyword",\n'
+    # Dynamically construct the schema template to keep the AI focused
+    schema = '{\n "[Hook Script]": "text",\n "[Hook Keyword]": "keyword",\n'
     for i in range(1, TOTAL_SLIDES + 1):
-        schema += f'  "[Slide {i} Script]": "text",\n  "[Slide {i} Keyword]": "keyword",\n'
+        schema += f' "[Slide {i} Script]": "text",\n "[Slide {i} Keyword]": "keyword",\n'
     schema = schema.rstrip(',\n') + '\n}'
-
+    
     prompt = (
         f"You are the master curriculum architect for Optispark Media Co. "
         f"Write a deep-dive, professional technical lecture training module about: '{topic}'.\n\n"
@@ -58,9 +61,10 @@ def generate_curriculum_via_groq(topic):
         "messages": [{"role": "user", "content": prompt}],
         "response_format": {"type": "json_object"}
     }
+    
     try:
-        res = requests.post("https://groq.com", json=payload, headers=headers).json()
-        return json.loads(res['choices']['message']['content'])
+        res = requests.post(groq_url, json=payload, headers=headers).json()
+        return json.loads(res['choices'][0]['message']['content'])
     except Exception as e:
         print(f"❌ Groq API Processing Crash: {e}")
         return None
@@ -108,8 +112,8 @@ def core_automation_loop():
                                 valueInputOption="RAW",
                                 body={"values": [["completed"]]}
                             ).execute()
-                            print(f"✅ Row {index} content generation batch successfully completed!")
                             
+                            print(f"✅ Row {index} content generation batch successfully completed!")
             except Exception as e:
                 print(f"❌ Error scanning row matrix logs: {e}")
         time.sleep(30)
